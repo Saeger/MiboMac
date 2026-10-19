@@ -1,16 +1,93 @@
 # MiboMac
 
-**[English](#english) · [Português](#português)**
+**[Português](#português) · [English](#english)**
 
-An unofficial native macOS app for watching **Intelbras Mibo** cameras (the ones you use with the *Mibo Smart* app) live from your Mac.
+App nativo e **não oficial** para macOS que mostra ao vivo as câmeras **Intelbras Mibo** (as do app *Mibo Smart*) no seu Mac.
 
-![MiboMac showing a camera in HD with the camera list in the sidebar](docs/screenshot.png)
+![MiboMac mostrando uma câmera em HD com a lista de câmeras na barra lateral](docs/screenshot.png)
 
-> **Disclaimer:** This is an independent, unofficial project. It is not affiliated with, endorsed by or supported by Intelbras, Imou or Dahua. "Intelbras" and "Mibo" are trademarks of their respective owners. The app talks to the same cloud API as the official Android app, which was reverse-engineered for interoperability. Intelbras can change that API at any time and break the app. Use it at your own risk (see [LICENSE](LICENSE)).
+---
+
+## Português
+
+> **Aviso:** projeto independente e não oficial, sem afiliação, endosso ou suporte da Intelbras, Imou ou Dahua. "Intelbras" e "Mibo" são marcas de seus respectivos donos. O app usa a mesma API de nuvem do app oficial para Android, obtida por engenharia reversa para fins de interoperabilidade. A Intelbras pode mudar essa API a qualquer momento, e o app pode deixar de funcionar. Use por sua conta e risco (veja a [LICENSE](LICENSE)).
+
+### Recursos
+- Login com a sua conta Mibo Smart (e-mail e senha).
+- Grade com todas as câmeras online, ou uma câmera por vez em HD/SD.
+- Áudio ao vivo: clique na câmera para ouvir e clique de novo para silenciar.
+- As transmissões passam pelo relay em nuvem da Intelbras e reconectam sozinhas. Não precisa abrir portas no roteador nem estar na mesma rede das câmeras.
+- App universal (Apple Silicon e Intel), macOS 14 Sonoma ou superior.
+
+### Instalação
+1. Baixe o `MiboMac.dmg` em [Releases](https://github.com/Saeger/MiboMac/releases) e arraste o **MiboMac** para **Aplicativos**.
+2. O app tem assinatura ad-hoc e não é notarizado pela Apple, então o macOS bloqueia a primeira abertura:
+   - **macOS 15+:** tente abrir, depois vá em *Ajustes do Sistema → Privacidade e Segurança* e clique em **Abrir Mesmo Assim**.
+   - **macOS 14:** clique com o botão direito no app e escolha **Abrir**.
+   - Ou, no Terminal: `xattr -dr com.apple.quarantine /Applications/MiboMac.app`
+
+### Primeiro acesso
+- Entre com o e-mail e a senha do Mibo Smart.
+- Para a sua conta Intelbras, cada Mac é um dispositivo novo. No primeiro acesso, o servidor pede para autorizar o Mac e o app envia um código de verificação para o seu e-mail. Basta digitá-lo uma vez e o Mac fica autorizado.
+- Marque **"Lembrar senha"** para guardar a senha no Keychain do macOS e entrar automaticamente.
+
+### Privacidade
+- A senha é enviada apenas para a nuvem da Intelbras (`*.easy4ipcloud.com`), por HTTPS. Se você marcar "Lembrar senha", ela fica guardada só no Keychain do seu Mac.
+- O e-mail fica salvo nas preferências do app para você não precisar digitá-lo de novo.
+- O app guarda um ID aleatório de dispositivo em `~/Library/Application Support/MiboMac/terminal_id`. Ele registra o Mac na sua conta Intelbras com esse ID e com o nome do computador, que é o que aparece na lista de dispositivos da conta. Se você apagar o arquivo, vai precisar verificar o Mac por e-mail de novo.
+- Sem analytics e sem servidores de terceiros.
+
+### Compilar a partir do código
+Requisitos: macOS 14+ e as Xcode Command Line Tools (`xcode-select --install`).
+
+**Build local rápido** (precisa do FFmpeg do Homebrew):
+```sh
+brew install ffmpeg
+./build.sh
+open build/MiboMac.app
+```
+Esse build só roda em Macs que têm o FFmpeg do Homebrew instalado.
+
+**Build universal independente** (o mesmo usado nas releases):
+```sh
+./package.sh
+```
+Na primeira execução, o script baixa o FFmpeg e compila uma versão estática mínima em `vendor/`, o que leva alguns minutos. Depois ele gera `dist/MiboMac.dmg` e `dist/MiboMac.zip`, que rodam em qualquer Mac com macOS 14+ sem Homebrew.
+
+### Diagnóstico
+```sh
+MIBO_EMAIL=voce@exemplo.com MIBO_PASSWORD='...' build/MiboMac.app/Contents/MacOS/MiboMac --selftest
+```
+O comando faz login, lista as câmeras e salva um quadro de cada câmera online em `$TMPDIR/mibo_<id>.png`. Use `MIBO_DEBUG=1` para registrar as requisições e respostas da API. Os logs incluem seu e-mail e os IDs das câmeras, então revise antes de compartilhar.
+
+### Problemas comuns
+| Mensagem | O que fazer |
+|---|---|
+| "Este Mac ainda não está autorizado" | Digite o código enviado para o seu e-mail. Use "Reenviar código" se ele expirou. |
+| "E-mail ou senha incorretos" | Confira suas credenciais no app oficial Mibo Smart. |
+| "Terminal bloqueado por excesso de tentativas" | Muitas tentativas de login com erro. Espere um pouco e tente de novo. |
+| Câmera parada em "Conectando…" | Confira se a câmera está online no app Mibo Smart. O app tenta de novo a cada poucos segundos. |
+
+### Contribuindo
+Issues e pull requests são bem-vindos. O código é pequeno:
+- `Sources/App/MiboAPI.swift`: cliente da API de nuvem (assinatura das requisições, login, lista de dispositivos, URLs de transmissão).
+- `Sources/App/MiboMacApp.swift`: interface em SwiftUI.
+- `Sources/App/StreamPlayer.swift` + `Sources/CPlayer/`: reprodução RTSP com FFmpeg.
+
+Testado apenas com câmeras Mibo na nuvem brasileira da Intelbras (`app-br.easy4ipcloud.com`). Relatos com outros modelos são bem-vindos.
+
+### Licença
+O MiboMac é distribuído sob a [Licença MIT](LICENSE).
+
+O app empacotado inclui o [FFmpeg](https://ffmpeg.org) com link estático, licenciado sob a [LGPL v2.1+](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). O `package.sh` compila o FFmpeg sem componentes GPL. Você pode recompilar o app com o seu próprio FFmpeg usando os scripts deste repositório, e o código-fonte do FFmpeg está em https://ffmpeg.org/releases/.
 
 ---
 
 ## English
+
+An unofficial native macOS app for watching **Intelbras Mibo** cameras (the ones you use with the *Mibo Smart* app) live from your Mac.
+
+> **Disclaimer:** This is an independent, unofficial project. It is not affiliated with, endorsed by or supported by Intelbras, Imou or Dahua. "Intelbras" and "Mibo" are trademarks of their respective owners. The app talks to the same cloud API as the official Android app, which was reverse-engineered for interoperability. Intelbras can change that API at any time and break the app. Use it at your own risk (see [LICENSE](LICENSE)).
 
 ### Features
 - Sign in with your existing Mibo Smart account (email + password).
@@ -82,41 +159,3 @@ Only tested with Mibo cameras on Intelbras' Brazilian cloud (`app-br.easy4ipclou
 MiboMac is released under the [MIT License](LICENSE).
 
 The packaged app statically links [FFmpeg](https://ffmpeg.org), which is licensed under the [LGPL v2.1+](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html). `package.sh` builds FFmpeg without GPL components. You can rebuild the app against your own FFmpeg with the scripts in this repository, and the FFmpeg source is available at https://ffmpeg.org/releases/.
-
----
-
-## Português
-
-App nativo e **não oficial** para macOS que mostra ao vivo as câmeras **Intelbras Mibo** (as do app *Mibo Smart*) no seu Mac.
-
-> **Aviso:** projeto independente e não oficial, sem afiliação, endosso ou suporte da Intelbras, Imou ou Dahua. "Intelbras" e "Mibo" são marcas de seus respectivos donos. O app usa a mesma API de nuvem do app oficial para Android, obtida por engenharia reversa para fins de interoperabilidade. A Intelbras pode mudar essa API a qualquer momento, e o app pode deixar de funcionar. Use por sua conta e risco.
-
-### Recursos
-- Login com a sua conta Mibo Smart (e-mail e senha).
-- Grade com todas as câmeras online, ou uma câmera por vez em HD/SD.
-- Áudio ao vivo: clique na câmera para ouvir e clique de novo para silenciar.
-- As transmissões passam pelo relay em nuvem da Intelbras e reconectam sozinhas. Não precisa abrir portas no roteador.
-- App universal (Apple Silicon e Intel), macOS 14 ou superior.
-
-### Instalação
-1. Baixe o `MiboMac.dmg` em [Releases](https://github.com/Saeger/MiboMac/releases) e arraste o **MiboMac** para **Aplicativos**.
-2. O app não é notarizado pela Apple, então o macOS bloqueia a primeira abertura:
-   - **macOS 15+:** tente abrir, depois vá em *Ajustes do Sistema → Privacidade e Segurança* e clique em **Abrir Mesmo Assim**.
-   - **macOS 14:** clique com o botão direito no app e escolha **Abrir**.
-   - Ou, no Terminal: `xattr -dr com.apple.quarantine /Applications/MiboMac.app`
-
-### Primeiro acesso
-- Entre com o e-mail e a senha do Mibo Smart.
-- Para a sua conta Intelbras, cada Mac é um dispositivo novo. No primeiro acesso, o app envia um código de verificação para o seu e-mail. Basta digitá-lo uma vez.
-- Marque **"Lembrar senha"** para guardar a senha no Keychain do macOS e entrar automaticamente.
-
-### Privacidade
-- A senha é enviada apenas para a nuvem da Intelbras, por HTTPS. Se você marcar "Lembrar senha", ela fica guardada só no Keychain do seu Mac.
-- O app registra o Mac na sua conta com um ID aleatório (`~/Library/Application Support/MiboMac/terminal_id`) e o nome do computador.
-- Sem analytics e sem servidores de terceiros.
-
-### Compilar
-Veja a seção [Build from source](#build-from-source) acima: `./build.sh` para uso local (com `brew install ffmpeg`) ou `./package.sh` para gerar o DMG universal.
-
-### Licença
-[MIT](LICENSE). O app empacotado inclui o FFmpeg (LGPL v2.1+). Veja a seção [License](#license).
