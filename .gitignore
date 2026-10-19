@@ -1,0 +1,10 @@
+# Build outputs
+/build/
+/dist/
+
+# FFmpeg source tarball and static builds produced by package.sh
+/vendor/
+
+# macOS
+.DS_Store
+._*
