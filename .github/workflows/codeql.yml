@@ -15,12 +15,18 @@ permissions:
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
-    # The app only builds on macOS (AppKit/SwiftUI); CodeQL's autobuild can't handle build.sh, so build manually.
+    # The app only builds on macOS (AppKit/SwiftUI), and CodeQL's autobuild can't handle build.sh.
+    # CodeQL traces Swift only through `swift build`/`xcodebuild`, hence Package.swift.
     runs-on: macos-latest
     strategy:
       fail-fast: false
       matrix:
-        language: [c-cpp, swift]
+        include:
+          - language: c-cpp
+            # CodeQL's tracer makes `uname -m` report x86_64 on arm64 runners; match Homebrew's arm64 FFmpeg.
+            build: ARCHS=arm64 ./build.sh
+          - language: swift
+            build: swift build --arch arm64
     steps:
       - uses: actions/checkout@v7
 
@@ -33,8 +39,7 @@ jobs:
           build-mode: manual
 
       - name: Build
-        # CodeQL's tracer makes `uname -m` report x86_64 on arm64 runners; match Homebrew's arm64 FFmpeg.
-        run: ARCHS=arm64 ./build.sh
+        run: ${{ matrix.build }}
 
       - uses: github/codeql-action/analyze@v4
         with:

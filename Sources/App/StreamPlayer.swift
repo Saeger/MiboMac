@@ -1,6 +1,9 @@
 import AVFoundation
 import AppKit
 import Foundation
+#if canImport(CPlayer)
+import CPlayer  // SwiftPM; build.sh uses Bridging-Header.h instead
+#endif
 
 /// Bridges the C FFmpeg player (mibo_player.c) to a CALayer. Callbacks arrive on the decode thread.
 final class StreamPlayer {

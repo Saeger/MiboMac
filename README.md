@@ -74,6 +74,8 @@ Issues e pull requests são bem-vindos. O código é pequeno:
 - `Sources/App/MiboMacApp.swift`: interface em SwiftUI.
 - `Sources/App/StreamPlayer.swift` + `Sources/CPlayer/`: reprodução RTSP com FFmpeg.
 
+Para desenvolver, você também pode usar `swift build` ou abrir o `Package.swift` no Xcode (precisa do FFmpeg do Homebrew). Para gerar o app, use `build.sh` ou `package.sh`.
+
 Testado apenas com câmeras Mibo na nuvem brasileira da Intelbras (`app-br.easy4ipcloud.com`). Relatos com outros modelos são bem-vindos.
 
 ### Licença
@@ -152,6 +154,8 @@ Issues and pull requests are welcome. The code is small:
 - `Sources/App/MiboAPI.swift`: cloud API client (request signing, login, device list, stream URLs).
 - `Sources/App/MiboMacApp.swift`: SwiftUI interface.
 - `Sources/App/StreamPlayer.swift` + `Sources/CPlayer/`: RTSP playback with FFmpeg.
+
+For development you can also use `swift build` or open `Package.swift` in Xcode (needs Homebrew FFmpeg). To produce the app bundle, use `build.sh` or `package.sh`.
 
 Only tested with Mibo cameras on Intelbras' Brazilian cloud (`app-br.easy4ipcloud.com`). Reports from other models are appreciated.
 

@@ -1,6 +1,7 @@
 # Build outputs
 /build/
 /dist/
+/.build/
 
 # FFmpeg source tarball and static builds produced by package.sh
 /vendor/
