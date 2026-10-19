@@ -4,6 +4,8 @@
 
 An unofficial native macOS app for watching **Intelbras Mibo** cameras (the ones you use with the *Mibo Smart* app) live from your Mac.
 
+![MiboMac showing a camera in HD with the camera list in the sidebar](docs/screenshot.png)
+
 > **Disclaimer:** This is an independent, unofficial project. It is not affiliated with, endorsed by or supported by Intelbras, Imou or Dahua. "Intelbras" and "Mibo" are trademarks of their respective owners. The app talks to the same cloud API as the official Android app, which was reverse-engineered for interoperability. Intelbras can change that API at any time and break the app. Use it at your own risk (see [LICENSE](LICENSE)).
 
 ---
