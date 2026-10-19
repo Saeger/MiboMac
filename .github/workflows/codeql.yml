@@ -1,0 +1,40 @@
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "23 4 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    # The app only builds on macOS (AppKit/SwiftUI); CodeQL's autobuild can't handle build.sh, so build manually.
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [c-cpp, swift]
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install FFmpeg
+        run: brew install ffmpeg
+
+      - uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: manual
+
+      - name: Build
+        run: ./build.sh
+
+      - uses: github/codeql-action/analyze@v4
+        with:
+          category: /language:${{ matrix.language }}
