@@ -40,6 +40,7 @@ final class AppModel: ObservableObject {
 
     private static func deleteRememberedEmail() {
         Keychain.delete(email: rememberedEmailAccount)
+        UserDefaults.standard.removeObject(forKey: "email")
     }
 
     init() {
