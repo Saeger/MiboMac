@@ -6,7 +6,7 @@ final class AppModel: ObservableObject {
     enum Phase { case login, verify, main }
 
     @Published var phase: Phase = .login
-    @Published var email: String = UserDefaults.standard.string(forKey: "email") ?? ""
+    @Published var email: String = AppModel.loadRememberedEmail() ?? ""
     @Published var cameras: [Camera] = []
     @Published var busy = false
     @Published var error: String?
@@ -14,6 +14,34 @@ final class AppModel: ObservableObject {
 
     let api = MiboAPI()
     private var password = ""
+
+    private static let rememberedEmailAccount = "__remembered_email__"
+
+    private static func loadRememberedEmail() -> String? {
+        let defaults = UserDefaults.standard
+        if let email = Keychain.password(email: rememberedEmailAccount) {
+            defaults.removeObject(forKey: "email")
+            return email
+        }
+        guard let email = defaults.string(forKey: "email") else { return nil }
+        saveRememberedEmail(email)
+        if Keychain.password(email: rememberedEmailAccount) == email {
+            defaults.removeObject(forKey: "email")
+        }
+        return email
+    }
+
+    private static func saveRememberedEmail(_ email: String) {
+        Keychain.save(email: rememberedEmailAccount, password: email)
+        if Keychain.password(email: rememberedEmailAccount) == email {
+            UserDefaults.standard.removeObject(forKey: "email")
+        }
+    }
+
+    private static func deleteRememberedEmail() {
+        Keychain.delete(email: rememberedEmailAccount)
+        UserDefaults.standard.removeObject(forKey: "email")
+    }
 
     init() {
         if !CommandLine.arguments.contains("--selftest"), !email.isEmpty, let pw = Keychain.password(email: email) {
@@ -31,7 +59,7 @@ final class AppModel: ObservableObject {
             try await api.login(email: email, password: password)
             self.email = email
             self.password = password
-            UserDefaults.standard.set(email, forKey: "email")
+            Self.saveRememberedEmail(email)
             if remember { Keychain.save(email: email, password: password) }
             cameras = try await api.cameras()
             phase = .main
@@ -85,6 +113,7 @@ final class AppModel: ObservableObject {
 
     func logout() {
         Keychain.delete(email: email)
+        Self.deleteRememberedEmail()
         password = ""
         cameras = []
         phase = .login
