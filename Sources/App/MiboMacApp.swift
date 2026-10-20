@@ -18,7 +18,17 @@ final class AppModel: ObservableObject {
     private static let rememberedEmailAccount = "__remembered_email__"
 
     private static func loadRememberedEmail() -> String? {
-        Keychain.password(email: rememberedEmailAccount)
+        let defaults = UserDefaults.standard
+        if let email = Keychain.password(email: rememberedEmailAccount) {
+            defaults.removeObject(forKey: "email")
+            return email
+        }
+        guard let email = defaults.string(forKey: "email") else { return nil }
+        saveRememberedEmail(email)
+        if Keychain.password(email: rememberedEmailAccount) == email {
+            defaults.removeObject(forKey: "email")
+        }
+        return email
     }
 
     private static func saveRememberedEmail(_ email: String) {
