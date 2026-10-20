@@ -33,6 +33,9 @@ final class AppModel: ObservableObject {
 
     private static func saveRememberedEmail(_ email: String) {
         Keychain.save(email: rememberedEmailAccount, password: email)
+        if Keychain.password(email: rememberedEmailAccount) == email {
+            UserDefaults.standard.removeObject(forKey: "email")
+        }
     }
 
     private static func deleteRememberedEmail() {
